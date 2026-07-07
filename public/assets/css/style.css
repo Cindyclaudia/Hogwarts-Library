@@ -1,0 +1,55 @@
+:root{
+    --hogwarts-red:#740001;
+    --hogwarts-gold:#D3A625;
+    --hogwarts-dark:#1A1A1A;
+}
+
+.sidebar-link{
+    text-decoration:none;
+}
+
+.card{
+    border:none;
+    border-radius:15px;
+}
+
+body.dark-mode{
+    background:#1A1A1A;
+    color:white;
+}
+
+body.dark-mode .card{
+    background:#2D2D2D;
+    color:white;
+}
+
+body.dark-mode table{
+    color:white;
+}
+
+/* ===================================
+   BUTTON AKSI CRUD
+=================================== */
+
+.table-action{
+    white-space: nowrap;
+}
+
+.table-action .btn{
+    min-width: 90px;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 6px 12px;
+}
+
+.table-action .btn i{
+    margin-right: 5px;
+}
+
+.btn-warning{
+    color: #000 !important;
+}
+
+.btn-danger{
+    color: #fff !important;
+}
