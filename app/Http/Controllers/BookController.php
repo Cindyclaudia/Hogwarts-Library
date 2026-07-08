@@ -8,6 +8,14 @@ use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
+    /**
+     * Folder upload cover pada hosting
+     */
+    private function coverUploadDir()
+    {
+        return '/home/nmzlpjmw/public_html/Uploads/books';
+    }
+
     public function index(Request $request)
     {
         $search = $request->search;
@@ -62,12 +70,14 @@ class BookController extends Controller
 
         if ($request->hasFile('cover')) {
 
-            $cover = time() .
-                '.' .
-                $request->cover->extension();
+            if (!file_exists($this->coverUploadDir())) {
+                mkdir($this->coverUploadDir(), 0777, true);
+            }
+
+            $cover = time() . '.' . $request->cover->extension();
 
             $request->cover->move(
-                public_path('uploads/books'),
+                $this->coverUploadDir(),
                 $cover
             );
         }
@@ -105,14 +115,39 @@ class BookController extends Controller
 
     public function update(Request $request, Book $book)
     {
-        $book->update([
+        $data = [
             'category_id' => $request->category_id,
             'judul' => $request->judul,
             'penulis' => $request->penulis,
             'penerbit' => $request->penerbit,
             'tahun_terbit' => $request->tahun_terbit,
             'stok' => $request->stok
-        ]);
+        ];
+
+        if ($request->hasFile('cover')) {
+
+            if (!file_exists($this->coverUploadDir())) {
+                mkdir($this->coverUploadDir(), 0777, true);
+            }
+
+            // Hapus cover lama
+            if ($book->cover &&
+                file_exists($this->coverUploadDir() . '/' . $book->cover)) {
+
+                unlink($this->coverUploadDir() . '/' . $book->cover);
+            }
+
+            $cover = time() . '.' . $request->cover->extension();
+
+            $request->cover->move(
+                $this->coverUploadDir(),
+                $cover
+            );
+
+            $data['cover'] = $cover;
+        }
+
+        $book->update($data);
 
         return redirect()
             ->route('books.index')
@@ -124,6 +159,12 @@ class BookController extends Controller
 
     public function destroy(Book $book)
     {
+        if ($book->cover &&
+            file_exists($this->coverUploadDir() . '/' . $book->cover)) {
+
+            unlink($this->coverUploadDir() . '/' . $book->cover);
+        }
+
         $book->delete();
 
         return redirect()

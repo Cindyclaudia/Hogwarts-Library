@@ -1,88 +1,166 @@
-@extends('layouts.app')
+<?php
 
-@section('content')
+namespace App\Http\Controllers;
 
-<h2>Edit Buku</h2>
+use App\Models\Book;
+use App\Models\Category;
+use Illuminate\Http\Request;
 
-<form
-    action="{{ route('books.update',$book->id) }}"
-    method="POST">
+class BookController extends Controller
+{
 
-    @csrf
-    @method('PUT')
+    private function coverUploadDir()
+    {
+        return rtrim(config('filesystems.uploads_base_path'), '/\\') . '/uploads/books';
+    }
 
-    <div class="mb-3">
+    public function index(Request $request)
+    {
+        $search = $request->search;
 
-        <label>Judul</label>
+        $books = Book::with('category')
 
-        <input
-            type="text"
-            name="judul"
-            value="{{ $book->judul }}"
-            class="form-control">
+            ->when($search, function ($query) use ($search) {
 
-    </div>
+                $query->where('judul', 'LIKE', "%{$search}%")
+                      ->orWhere('penulis', 'LIKE', "%{$search}%")
+                      ->orWhere('penerbit', 'LIKE', "%{$search}%")
+                      ->orWhereHas('category', function ($q) use ($search) {
 
-    <div class="mb-3">
+                            $q->where('nama_kategori', 'LIKE', "%{$search}%");
 
-        <label>Kategori</label>
+                      });
 
-        <select
-            name="category_id"
-            class="form-control">
+            })
 
-            @foreach($categories as $category)
+            ->latest()
 
-            <option
-                value="{{ $category->id }}"
-                {{ $book->category_id == $category->id ? 'selected' : '' }}>
+            ->get();
 
-                {{ $category->nama_kategori }}
+        if ($request->ajax()) {
 
-            </option>
+            return view('books.table', compact('books'))->render();
 
-            @endforeach
+        }
 
-        </select>
+        return view('books.index', compact('books'));
+    }
 
-    </div>
+    public function create()
+    {
+        $categories = Category::all();
 
-    <div class="mb-3">
-        <label>Penulis</label>
-        <input type="text"
-               name="penulis"
-               value="{{ $book->penulis }}"
-               class="form-control">
-    </div>
+        return view('books.create', compact('categories'));
+    }
 
-    <div class="mb-3">
-        <label>Penerbit</label>
-        <input type="text"
-               name="penerbit"
-               value="{{ $book->penerbit }}"
-               class="form-control">
-    </div>
+    public function store(Request $request)
+    {
+        $request->validate([
+            'judul' => 'required',
+            'penulis' => 'required',
+            'penerbit' => 'required',
+            'tahun_terbit' => 'required',
+            'stok' => 'required',
+            'category_id' => 'required'
+        ]);
 
-    <div class="mb-3">
-        <label>Tahun Terbit</label>
-        <input type="number"
-               name="tahun_terbit"
-               value="{{ $book->tahun_terbit }}"
-               class="form-control">
-    </div>
+        $cover = null;
 
-    <div class="mb-3">
-        <label>Stok</label>
-        <input type="number"
-               name="stok"
-               value="{{ $book->stok }}"
-               class="form-control">
-    </div>
+        if ($request->hasFile('cover')) {
 
-    <button class="btn btn-primary">
-        Update
-    </button>
+            $cover = time() .
+                '.' .
+                $request->cover->extension();
 
-</form>
+            $request->cover->move(
+                $this->coverUploadDir(),
+                $cover
+            );
+        }
 
-@endsection
+        Book::create([
+            'category_id' => $request->category_id,
+            'judul' => $request->judul,
+            'penulis' => $request->penulis,
+            'penerbit' => $request->penerbit,
+            'tahun_terbit' => $request->tahun_terbit,
+            'stok' => $request->stok,
+            'cover' => $cover
+        ]);
+
+        return redirect()
+            ->route('books.index')
+            ->with(
+                'success',
+                'Buku berhasil ditambahkan'
+            );
+    }
+
+    public function edit(Book $book)
+    {
+        $categories = Category::all();
+
+        return view(
+            'books.edit',
+            compact(
+                'book',
+                'categories'
+            )
+        );
+    }
+
+    public function update(Request $request, Book $book)
+    {
+        $data = [
+            'category_id' => $request->category_id,
+            'judul' => $request->judul,
+            'penulis' => $request->penulis,
+            'penerbit' => $request->penerbit,
+            'tahun_terbit' => $request->tahun_terbit,
+            'stok' => $request->stok
+        ];
+
+        if ($request->hasFile('cover')) {
+
+            // Hapus cover lama jika ada, supaya file lama tidak menumpuk
+            if ($book->cover && file_exists($this->coverUploadDir() . '/' . $book->cover)) {
+
+                unlink($this->coverUploadDir() . '/' . $book->cover);
+
+            }
+
+            $cover = time() .
+                '.' .
+                $request->cover->extension();
+
+            $request->cover->move(
+                $this->coverUploadDir(),
+                $cover
+            );
+
+            $data['cover'] = $cover;
+
+        }
+
+        $book->update($data);
+
+        return redirect()
+            ->route('books.index')
+            ->with(
+                'success',
+                'Buku berhasil diupdate'
+            );
+    }
+
+    public function destroy(Book $book)
+    {
+        $book->delete();
+
+        return redirect()
+            ->route('books.index')
+            ->with(
+                'success',
+                'Buku berhasil dihapus'
+            );
+    }
+}

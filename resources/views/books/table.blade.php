@@ -9,7 +9,7 @@
         @if($book->cover)
 
             <img
-                src="{{ asset('uploads/books/' . $book->cover) }}"
+                src="{{ asset('Uploads/books/' . $book->cover) }}"
                 alt="{{ $book->judul }}"
                 width="70"
                 class="img-thumbnail">
@@ -37,9 +37,7 @@
     <td class="text-center">
 
         <span class="badge bg-success">
-
             {{ $book->stok }}
-
         </span>
 
     </td>
@@ -48,14 +46,12 @@
 
         <a href="{{ route('books.edit', $book->id) }}"
            class="btn btn-warning btn-sm">
-
             Edit
-
         </a>
 
         <form action="{{ route('books.destroy', $book->id) }}"
               method="POST"
-              class="d-inline delete-form">
+              class="d-inline">
 
             @csrf
             @method('DELETE')
@@ -63,9 +59,7 @@
             <button
                 type="submit"
                 class="btn btn-danger btn-sm">
-
                 Hapus
-
             </button>
 
         </form>
@@ -79,9 +73,7 @@
 <tr>
 
     <td colspan="9" class="text-center py-4">
-
         <strong>Tidak ada data buku.</strong>
-
     </td>
 
 </tr>

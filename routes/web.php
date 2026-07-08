@@ -52,17 +52,16 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Master Data
+    | Master Data - Bisa diakses Admin & Petugas
     |--------------------------------------------------------------------------
     */
 
-    Route::resource('categories', CategoryController::class);
     Route::resource('books', BookController::class);
     Route::resource('members', MemberController::class);
 
     /*
     |--------------------------------------------------------------------------
-    | Transaksi
+    | Transaksi - Bisa diakses Admin & Petugas
     |--------------------------------------------------------------------------
     */
 
@@ -71,39 +70,52 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Laporan (Halaman)
+    | Khusus Admin
     |--------------------------------------------------------------------------
+    | Kategori dan Laporan hanya boleh diakses oleh role 'admin'.
+    | Jika Petugas mencoba mengakses langsung lewat URL, akan menerima 403.
     */
 
-    Route::get('/reports/borrowings', [ReportController::class, 'borrowings'])
-        ->name('reports.borrowings');
+    Route::middleware(['admin'])->group(function () {
 
-    Route::get('/reports/fines', [ReportController::class, 'fines'])
-        ->name('reports.fines');
+        Route::resource('categories', CategoryController::class);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Export PDF
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | Laporan (Halaman)
+        |--------------------------------------------------------------------------
+        */
 
-    Route::get('/reports/borrowings/pdf', [ReportController::class, 'borrowingsPdf'])
-        ->name('reports.borrowings.pdf');
+        Route::get('/reports/borrowings', [ReportController::class, 'borrowings'])
+            ->name('reports.borrowings');
 
-    Route::get('/reports/fines/pdf', [ReportController::class, 'finesPdf'])
-        ->name('reports.fines.pdf');
+        Route::get('/reports/fines', [ReportController::class, 'fines'])
+            ->name('reports.fines');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Export Excel
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | Export PDF
+        |--------------------------------------------------------------------------
+        */
 
-    Route::get('/reports/borrowings/excel', [ReportController::class, 'borrowingsExcel'])
-        ->name('reports.borrowings.excel');
+        Route::get('/reports/borrowings/pdf', [ReportController::class, 'borrowingsPdf'])
+            ->name('reports.borrowings.pdf');
 
-    Route::get('/reports/fines/excel', [ReportController::class, 'finesExcel'])
-        ->name('reports.fines.excel');
+        Route::get('/reports/fines/pdf', [ReportController::class, 'finesPdf'])
+            ->name('reports.fines.pdf');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Export Excel
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/reports/borrowings/excel', [ReportController::class, 'borrowingsExcel'])
+            ->name('reports.borrowings.excel');
+
+        Route::get('/reports/fines/excel', [ReportController::class, 'finesExcel'])
+            ->name('reports.fines.excel');
+    });
 });
 
 /*

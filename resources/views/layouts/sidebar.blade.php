@@ -21,12 +21,14 @@
                 </a>
             </li>
 
+            @if (auth()->user()->role === 'admin')
             <li>
                 <a href="{{ route('categories.index') }}">
                     <i class="fas fa-book-open"></i>
                     Kategori
                 </a>
             </li>
+            @endif
 
             <li>
                 <a href="{{ route('books.index') }}">
@@ -56,6 +58,7 @@
                 </a>
             </li>
 
+            @if (auth()->user()->role === 'admin')
             <li>
                 <a href="{{ route('reports.borrowings') }}">
                     <i class="fas fa-file-lines"></i>
@@ -69,6 +72,7 @@
                     Laporan Denda
                 </a>
             </li>
+            @endif
 
         </ul>
 
